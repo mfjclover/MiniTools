@@ -7,5 +7,5 @@ This repository contains a collection of Python minitools designed to simplify s
 1. **Image Processing Tool**
    - Description: Allows copying or moving images from one directory to another based on a list of image names provided in a `.txt` file.
    - Supported formats: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`
-   - [See more details](./image-processing-tool/README.md)
+   - [See more details](image_processing_tools/README.md)
   
