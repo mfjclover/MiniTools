@@ -31,56 +31,63 @@ def select_file(label_var):
     if file:
         label_var.set(file)
 
-def execute_copy():
+def execute():
     image_directory = source_dir.get()
     name_file = name_file_path.get()
     destination_directory = dest_dir.get()
+    mode = mode_var.get()
 
     if not all([image_directory, name_file, destination_directory]):
-        messagebox.showwarning("Input error", "Please select all directories and the .txt file.")
+        messagebox.showwarning("Input error", "Please select all directories and the .txt file with image name.")
         return
 
     # Create destination directory if it doesn't exist
     os.makedirs(destination_directory, exist_ok=True)
 
-    # Read listed names
+    # Read image name listed in the file
     with open(name_file, 'r') as file:
         listed_names = {line.strip() for line in file if line.strip()}
 
     # Get all images in the directory and subdirectories
     all_images = get_all_images(image_directory)
 
-    # Determine images to copy
-    images_to_copy = set()
+    # Determine images to copy/move
+    images_to_process = set()
     for image in all_images:
         image_name = os.path.splitext(os.path.basename(image))[0]
         if image_name in listed_names:
-            images_to_copy.add(image)
+            images_to_process.add(image)
 
-    # Copy listed images
-    copied_count = 0
-    for image in images_to_copy:
+    # Copy or move listed images
+    processed_count = 0
+    for image in images_to_process:
         source_path = image
         original_filename = os.path.basename(image)
         unique_filename = get_unique_filename(destination_directory, original_filename)
         destination_path = os.path.join(destination_directory, unique_filename)
-        try:
-            shutil.copy(source_path, destination_path)
-            copied_count += 1
-        except OSError as e:
-            print(f'Error copying {image}: {e}')
 
-    messagebox.showinfo("Result", f'{copied_count} images have been copied.')
+        try:
+            if mode == "Copy":
+                shutil.copy(source_path, destination_path)
+            else:
+                shutil.move(source_path, destination_path)
+            processed_count += 1
+        except OSError as e:
+            print(f'Error processing {image}: {e}')
+
+    action = "copied" if mode == "Copy" else "moved"
+    messagebox.showinfo("Result", f'{processed_count} images have been {action}.')
 
 # Create the GUI
 root = tk.Tk()
-root.title("Copy Listed Images")
+root.title("Process Images by Name")
 
 source_dir = tk.StringVar()
 dest_dir = tk.StringVar()
 name_file_path = tk.StringVar()
+mode_var = tk.StringVar(value="Copy")  # Default mode is "Copy"
 
-tk.Label(root, text="Image directory:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
+tk.Label(root, text="Images directory:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
 tk.Entry(root, textvariable=source_dir, width=50).grid(row=0, column=1, padx=10, pady=5)
 tk.Button(root, text="Select", command=lambda: select_directory(source_dir)).grid(row=0, column=2, padx=10, pady=5)
 
@@ -92,6 +99,10 @@ tk.Label(root, text="File containing image names:").grid(row=2, column=0, padx=1
 tk.Entry(root, textvariable=name_file_path, width=50).grid(row=2, column=1, padx=10, pady=5)
 tk.Button(root, text="Select", command=lambda: select_file(name_file_path)).grid(row=2, column=2, padx=10, pady=5)
 
-tk.Button(root, text="Execute", command=execute_copy).grid(row=3, column=1, pady=20)
+tk.Label(root, text="Select mode:").grid(row=3, column=0, padx=10, pady=5, sticky="e")
+mode_selector = tk.OptionMenu(root, mode_var, "Copy", "Move")
+mode_selector.grid(row=3, column=1, padx=10, pady=5)
+
+tk.Button(root, text="Execute", command=execute).grid(row=4, column=1, pady=20)
 
 root.mainloop()
